@@ -1,0 +1,52 @@
+{
+  "decisiones": {
+    "type": "decision",
+    "agent": "",
+    "project": "",
+    "date": "",
+    "tags": [],
+    "created": "",
+    "sync_status": "pending",
+    "refined": false
+  },
+  "aprendizajes": {
+    "type": "aprendizaje",
+    "agent": "",
+    "project": "",
+    "date": "",
+    "tags": [],
+    "created": "",
+    "sync_status": "pending",
+    "refined": false
+  },
+  "convenciones": {
+    "type": "convencion",
+    "agent": "",
+    "project": "",
+    "date": "",
+    "tags": [],
+    "created": "",
+    "sync_status": "pending",
+    "refined": false
+  },
+  "arquitectura": {
+    "type": "arquitectura",
+    "agent": "",
+    "project": "",
+    "date": "",
+    "tags": [],
+    "created": "",
+    "sync_status": "pending",
+    "refined": false
+  },
+  "session": {
+    "type": "session",
+    "agent": "",
+    "project": "",
+    "date": "",
+    "tags": [],
+    "created": "",
+    "sync_status": "pending",
+    "refined": false
+  }
+}

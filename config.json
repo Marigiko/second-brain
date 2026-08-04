@@ -1,0 +1,27 @@
+{
+  "obsidian": {
+    "vault_path": "D:/Documentos/Bovedas/Main/Second Brain",
+    "api_base_url": "https://127.0.0.1:27124",
+    "api_key_env": "OBSIDIAN_API_KEY",
+    "use_http_fallback": true,
+    "http_url": "http://127.0.0.1:27123"
+  },
+  "sync": {
+    "interval_minutes": 15,
+    "retry_on_failure": true,
+    "max_retries": 3
+  },
+  "refinement": {
+    "interval_days": 3,
+    "min_note_age_days": 7,
+    "consolidate_threshold": 0.7
+  },
+  "projects": [
+    {
+      "name": "gentle-ai",
+      "path": "/mnt/d/Projects/gentle-ai",
+      "enabled": true
+    }
+  ],
+  "agents": ["mimo", "opencode", "n8n", "manual"]
+}

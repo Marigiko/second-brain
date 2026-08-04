@@ -1,0 +1,18 @@
+{
+  "name": "second-brain",
+  "version": "1.0.0",
+  "description": "Sistema de memoria persistente hibrida con sync a Obsidian",
+  "main": "src/sync-engine.js",
+  "scripts": {
+    "sync": "node src/sync-engine.js",
+    "refine": "python3 src/refinement.py",
+    "dedup": "python3 src/deduplication.py",
+    "watch": "node src/file-watcher.js",
+    "webhook": "node src/webhook-server.js",
+    "setup-cron": "bash setup-cron.sh"
+  },
+  "dependencies": {
+    "node-cron": "^3.0.3",
+    "js-yaml": "^4.1.0"
+  }
+}
