@@ -101,6 +101,132 @@ async function tagList() {
   return makeRequest('GET', '/tags/');
 }
 
+// ---------------------------------------------------------------------------
+// Backend de filesystem
+//
+// La REST API exige que Obsidian este abierto, con el plugin Local REST API
+// activo y la API key exportada. Historicamente eso fallo: las primeras notas
+// de prueba quedaron con `sync_status: error` y un HTTP 401.
+//
+// El vault es un directorio normal y desde WSL se alcanza por `vault_path`, asi
+// que escribir a disco es el camino confiable. Obsidian toma los cambios solo.
+// `write_mode` en config.json: 'auto' (REST y si falla FS) | 'rest' | 'filesystem'.
+// ---------------------------------------------------------------------------
+
+function vaultAbsolutePath(vaultRelativePath) {
+  const base = loadConfig().obsidian.vault_path;
+  if (!base) throw new Error('config.obsidian.vault_path no esta definido');
+  return path.join(base, vaultRelativePath);
+}
+
+function fsEnsureDir(dirPath) {
+  if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+}
+
+function fsWrite(vaultRelativePath, content) {
+  const abs = vaultAbsolutePath(vaultRelativePath);
+  fsEnsureDir(path.dirname(abs));
+  fs.writeFileSync(abs, content, 'utf8');
+  return abs;
+}
+
+function fsRead(vaultRelativePath) {
+  return fs.readFileSync(vaultAbsolutePath(vaultRelativePath), 'utf8');
+}
+
+function fsExists(vaultRelativePath) {
+  return fs.existsSync(vaultAbsolutePath(vaultRelativePath));
+}
+
+function fsAppend(vaultRelativePath, content) {
+  const abs = vaultAbsolutePath(vaultRelativePath);
+  fsEnsureDir(path.dirname(abs));
+  fs.appendFileSync(abs, content, 'utf8');
+  return abs;
+}
+
+// --- API unificada: la que deben usar sync-engine y el resto ---------------
+
+function writeMode() {
+  return loadConfig().obsidian.write_mode || 'auto';
+}
+
+/** Escribe (o reemplaza) una nota. Devuelve el backend que la escribio. */
+async function noteWrite(vaultRelativePath, content) {
+  const mode = writeMode();
+
+  if (mode === 'filesystem') {
+    fsWrite(vaultRelativePath, content);
+    return 'filesystem';
+  }
+
+  try {
+    await vaultWrite(vaultRelativePath, content);
+    return 'rest';
+  } catch (err) {
+    if (mode === 'rest') throw err;
+    fsWrite(vaultRelativePath, content);
+    return 'filesystem';
+  }
+}
+
+/** Appendea al final de una nota, creandola si no existe. */
+async function noteAppend(vaultRelativePath, content) {
+  const mode = writeMode();
+
+  if (mode === 'filesystem') {
+    fsAppend(vaultRelativePath, content);
+    return 'filesystem';
+  }
+
+  try {
+    await vaultAppend(vaultRelativePath, content);
+    return 'rest';
+  } catch (err) {
+    if (mode === 'rest') throw err;
+    fsAppend(vaultRelativePath, content);
+    return 'filesystem';
+  }
+}
+
+/** Lee una nota; null si no existe (en cualquiera de los dos backends). */
+async function noteRead(vaultRelativePath) {
+  const mode = writeMode();
+
+  if (mode !== 'filesystem') {
+    try {
+      return await vaultRead(vaultRelativePath);
+    } catch {
+      if (mode === 'rest') return null;
+    }
+  }
+  return fsExists(vaultRelativePath) ? fsRead(vaultRelativePath) : null;
+}
+
+/** Existe la nota. Con REST caido cae a filesystem. */
+async function noteExists(vaultRelativePath) {
+  return (await noteRead(vaultRelativePath)) !== null;
+}
+
+/** Lista los .md de un directorio del vault. [] si no existe. */
+async function noteListDir(vaultRelativeDir) {
+  const mode = writeMode();
+
+  if (mode !== 'filesystem') {
+    try {
+      const res = await vaultList(vaultRelativeDir.replace(/\/?$/, '/'));
+      const files = res && res.files ? res.files : [];
+      return files.filter(f => f.endsWith('.md'));
+    } catch {
+      if (mode === 'rest') return [];
+    }
+  }
+
+  const abs = vaultAbsolutePath(vaultRelativeDir);
+  if (!fs.existsSync(abs)) return [];
+  return fs.readdirSync(abs).filter(f => f.endsWith('.md'));
+}
+
 module.exports = {
   vaultList,
   vaultRead,
@@ -110,5 +236,13 @@ module.exports = {
   vaultDelete,
   searchSimple,
   tagList,
-  makeRequest
+  makeRequest,
+  // API unificada (REST + filesystem)
+  noteWrite,
+  noteAppend,
+  noteRead,
+  noteExists,
+  noteListDir,
+  vaultAbsolutePath,
+  writeMode
 };
