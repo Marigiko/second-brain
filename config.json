@@ -1,10 +1,49 @@
 {
   "obsidian": {
-    "vault_path": "D:/Documentos/Bovedas/Main/Second Brain",
+    "vault_path": "/mnt/d/Documentos/Bovedas/Main",
+    "vault_path_windows": "D:/Documentos/Bovedas/Main",
+    "write_mode": "auto",
     "api_base_url": "https://127.0.0.1:27124",
     "api_key_env": "OBSIDIAN_API_KEY",
     "use_http_fallback": true,
     "http_url": "http://127.0.0.1:27123"
+  },
+  "vault": {
+    "areas": {
+      "proyectos": "Proyectos",
+      "conocimiento": "Conocimiento",
+      "archivo": "Archivo"
+    },
+    "moc": {
+      "auto_create": true,
+      "filename": {
+        "proyectos": "00 - Mapa del Proyecto.md",
+        "conocimiento": "00 - Mapa del dominio.md"
+      }
+    }
+  },
+  "routing": {
+    "_comment": "Regla del vault (00 - Indice.md): si la nota deja de importar cuando el proyecto termina va a Proyectos; si sirve para el proximo trabajo parecido va a Conocimiento. Un agente no puede decidir eso por nota, asi que el default es SIEMPRE proyectos y Conocimiento es opt-in explicito, via knowledge_domain + knowledge_categories del proyecto.",
+    "default_area": "proyectos",
+    "categories": {
+      "diario": {
+        "subfolder": "Diario"
+      },
+      "decisiones": {
+        "subfolder": "Decisiones"
+      },
+      "arquitectura": {
+        "subfolder": "Arquitectura"
+      },
+      "aprendizajes": {
+        "subfolder": "Aprendizajes"
+      },
+      "convenciones": {
+        "subfolder": "Convenciones"
+      }
+    },
+    "knowledge_inbox": "Bandeja de entrada",
+    "_comment_inbox": "La taxonomia de un dominio de Conocimiento (Problemas/, Soluciones/, Paises/...) es CURADA A MANO y no se puede derivar de la categoria que usa el agente. Por eso todo lo que el sync manda a Conocimiento cae en una sola bandeja, para destilar despues. Asi el automatismo no contamina la estructura curada."
   },
   "sync": {
     "interval_minutes": 15,
@@ -18,10 +57,100 @@
   },
   "projects": [
     {
+      "name": "scrap",
+      "path": "/mnt/d/Projects/scrap",
+      "vault_folder": "Magnar Scrap",
+      "knowledge_domain": "Scraping Legal",
+      "knowledge_categories": [
+        "aprendizajes",
+        "convenciones"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "ai-workstation",
+      "path": "/mnt/d/Projects/ai-workstation",
+      "vault_folder": "Ecosistema AI",
+      "enabled": true
+    },
+    {
+      "name": "ai-workstation-environment",
+      "path": "/mnt/d/Projects/ai-workstation-environment",
+      "vault_folder": "Ecosistema AI",
+      "enabled": true
+    },
+    {
+      "name": "terax-ai",
+      "path": "/mnt/d/Projects/terax-ai",
+      "vault_folder": "Ecosistema AI",
+      "enabled": true
+    },
+    {
       "name": "gentle-ai",
       "path": "/mnt/d/Projects/gentle-ai",
+      "vault_folder": "Ecosistema AI",
+      "enabled": true
+    },
+    {
+      "name": "dotfiles",
+      "path": "/mnt/d/Projects/dotfiles",
+      "vault_folder": "Ecosistema AI",
+      "enabled": true
+    },
+    {
+      "name": "mimo-xp",
+      "path": "/home/keyz/mimo-xp",
+      "vault_folder": "Ecosistema AI",
+      "enabled": true
+    },
+    {
+      "name": "ai-job-search",
+      "path": "/mnt/d/Projects/ai-job-search",
+      "vault_folder": "CareerOS",
+      "enabled": true
+    },
+    {
+      "name": "facil-web-ai",
+      "path": "/mnt/d/Projects/facil-web-ai",
+      "vault_folder": "Facil AI",
+      "enabled": true
+    },
+    {
+      "name": "lifeos",
+      "path": "/mnt/d/Projects/lifeos",
+      "vault_folder": "LifeOS",
+      "enabled": true
+    },
+    {
+      "name": "MindLingo",
+      "path": "/mnt/d/Projects/MindLingo",
+      "vault_folder": "MindLingo",
+      "enabled": true
+    },
+    {
+      "name": "FAANG-Break",
+      "path": "/mnt/d/Projects/FAANG-Break",
+      "vault_folder": "FAANG Break",
+      "enabled": true
+    },
+    {
+      "name": "Hornero-Tech-SaaS",
+      "path": "/mnt/d/Projects/Hornero-Tech-SaaS",
+      "vault_folder": "Hornero Tech",
+      "enabled": true
+    },
+    {
+      "name": "Exploration-Nightmare",
+      "path": "/mnt/d/Software/Unity/Exploration-Nightmare",
+      "vault_folder": "Exploration Nightmare",
       "enabled": true
     }
   ],
-  "agents": ["mimo", "opencode", "n8n", "manual"]
+  "agents": [
+    "mimo",
+    "opencode",
+    "claude",
+    "n8n",
+    "manual"
+  ]
 }

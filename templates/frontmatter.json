@@ -1,51 +1,48 @@
 {
+  "_comment": "Convencion del vault Main (00 - Indice.md): frontmatter minimo = tags + created (ISO YYYY-MM-DD). El campo `date` se elimino el 2026-08-27 porque duplicaba `created` y produjo el frontmatter inconsistente que hubo que normalizar en el vault. Los demas campos son operativos del motor de sync.",
+
   "decisiones": {
+    "tags": [],
+    "created": "",
     "type": "decision",
     "agent": "",
     "project": "",
-    "date": "",
-    "tags": [],
-    "created": "",
     "sync_status": "pending",
     "refined": false
   },
   "aprendizajes": {
+    "tags": [],
+    "created": "",
     "type": "aprendizaje",
     "agent": "",
     "project": "",
-    "date": "",
-    "tags": [],
-    "created": "",
     "sync_status": "pending",
     "refined": false
   },
   "convenciones": {
+    "tags": [],
+    "created": "",
     "type": "convencion",
     "agent": "",
     "project": "",
-    "date": "",
-    "tags": [],
-    "created": "",
     "sync_status": "pending",
     "refined": false
   },
   "arquitectura": {
+    "tags": [],
+    "created": "",
     "type": "arquitectura",
     "agent": "",
     "project": "",
-    "date": "",
-    "tags": [],
-    "created": "",
     "sync_status": "pending",
     "refined": false
   },
   "session": {
+    "tags": [],
+    "created": "",
     "type": "session",
     "agent": "",
     "project": "",
-    "date": "",
-    "tags": [],
-    "created": "",
     "sync_status": "pending",
     "refined": false
   }

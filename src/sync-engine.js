@@ -1,13 +1,21 @@
+/**
+ * sync-engine.js — Exporta las notas locales de `.second-brain/` al vault de Obsidian.
+ *
+ * El routing NO vive aca: lo resuelve `vault-paths.js` desde `config.json`.
+ * Antes este archivo tenia `OBSIDIAN_TARGET_DIR = 'Second Brain'` hardcodeado,
+ * que apuntaba a una carpeta que ya no existe en el vault.
+ */
+
 const fs = require('fs');
 const path = require('path');
 const obsidian = require('./obsidian-client');
+const vaultPaths = require('./vault-paths');
 
-const CONFIG_PATH = path.join(__dirname, '..', 'config.json');
 const SECOND_BRAIN_DIR = '.second-brain';
-const OBSIDIAN_TARGET_DIR = 'Second Brain';
+const CATEGORIES = ['diario', 'decisiones', 'aprendizajes', 'convenciones', 'arquitectura'];
 
 function loadConfig() {
-  return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+  return vaultPaths.loadConfig();
 }
 
 function readFrontmatter(content) {
@@ -29,8 +37,17 @@ function updateFrontmatter(content, updates) {
   const fm = yaml.load(match[1]) || {};
   Object.assign(fm, updates);
 
+  // Un sync exitoso borra el error viejo; si no, queda pegado para siempre
+  // y confunde al que lea la nota en Obsidian.
+  if (updates.sync_status === 'synced') delete fm.last_error;
+
   const newFm = '---\n' + yaml.dump(fm) + '---';
   return content.replace(/^---\n[\s\S]*?\n---/, newFm);
+}
+
+function stripFrontmatter(content) {
+  const m = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)/);
+  return m ? m[1] : content;
 }
 
 function getLocalNotes(projectPath) {
@@ -38,26 +55,18 @@ function getLocalNotes(projectPath) {
   if (!fs.existsSync(sbDir)) return [];
 
   const notes = [];
-  const categories = ['diario', 'decisiones', 'aprendizajes', 'convenciones', 'arquitectura'];
 
-  for (const category of categories) {
+  for (const category of CATEGORIES) {
     const catDir = path.join(sbDir, category);
     if (!fs.existsSync(catDir)) continue;
 
-    const files = fs.readdirSync(catDir).filter(f => f.endsWith('.md'));
-    for (const file of files) {
+    for (const file of fs.readdirSync(catDir).filter(f => f.endsWith('.md'))) {
       const filePath = path.join(catDir, file);
       const content = fs.readFileSync(filePath, 'utf8');
       const fm = readFrontmatter(content);
 
       if (fm.sync_status === 'pending' || fm.sync_status === 'error') {
-        notes.push({
-          filePath,
-          category,
-          filename: file,
-          content,
-          frontmatter: fm
-        });
+        notes.push({ filePath, category, filename: file, content, frontmatter: fm });
       }
     }
   }
@@ -65,80 +74,117 @@ function getLocalNotes(projectPath) {
   return notes;
 }
 
-async function syncNote(projectName, note) {
-  const targetDir = `${OBSIDIAN_TARGET_DIR}/${note.category.charAt(0).toUpperCase() + note.category.slice(1)}`;
+/**
+ * Crea el MOC de la carpeta contenedora si NO hay ninguno.
+ *
+ * No alcanza con chequear el nombre exacto: en el vault los MOC existentes se
+ * llaman distinto segun la carpeta (`00 - Mapa del Ecosistema.md`,
+ * `00 - Estado de tickets.md`, `00 - Mapa del dominio.md`). Chequear solo el
+ * nombre por default crea un segundo indice que compite con el que ya estaba.
+ * La convencion del vault es que el indice de una carpeta es cualquier `00 - *`.
+ */
+async function ensureMoc(projectName, category, config) {
+  if (!config.vault.moc || !config.vault.moc.auto_create) return null;
+
+  const mocPath = vaultPaths.resolveMocPath(projectName, category, config);
+  const containerDir = mocPath.split('/').slice(0, -1).join('/');
+
+  const existing = await obsidian.noteListDir(containerDir);
+  if (existing.some(f => f.startsWith('00 - '))) return null;
+
+  await obsidian.noteWrite(mocPath, vaultPaths.buildMocContent(projectName, category, config));
+  return mocPath;
+}
+
+async function syncNote(projectName, note, config) {
+  const target = vaultPaths.resolveTarget(projectName, note.category, note.filename, config);
+
+  // La copia del vault se marca `synced` de entrada: la fuente de verdad del
+  // estado es el archivo local, y una nota que dice `pending` dentro de Obsidian
+  // es ruido que confunde a quien la lee ahi.
+  const exported = updateFrontmatter(note.content, { sync_status: 'synced' });
 
   if (note.category === 'diario') {
-    const targetPath = `${targetDir}/${note.filename}`;
-    try {
-      let existing = '';
-      try {
-        existing = await obsidian.vaultRead(targetPath);
-      } catch {
-        // No existe, se creara
-      }
-
-      if (existing) {
-        const bodyMatch = note.content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)/);
-        const body = bodyMatch ? bodyMatch[1] : note.content;
-
-        await obsidian.vaultPatch(targetPath, {
-          targetType: 'heading',
-          target: [note.filename.replace('.md', '')],
-          operation: 'append',
-          content: body
-        });
-      } else {
-        await obsidian.vaultWrite(targetPath, note.content);
-      }
-    } catch (err) {
-      throw new Error(`Sync diario fallo: ${err.message}`);
+    // El diario es acumulativo: si la nota del dia ya existe en el vault,
+    // se le appendea el cuerpo en vez de reemplazarla.
+    const existing = await obsidian.noteRead(target.path);
+    if (existing) {
+      await obsidian.noteAppend(target.path, '\n' + stripFrontmatter(exported).trim() + '\n');
+    } else {
+      await obsidian.noteWrite(target.path, exported);
     }
   } else {
-    const targetPath = `${targetDir}/${note.filename}`;
-    try {
-      await obsidian.vaultWrite(targetPath, note.content);
-    } catch (err) {
-      throw new Error(`Sync permanente fallo: ${err.message}`);
-    }
+    await obsidian.noteWrite(target.path, exported);
   }
+
+  return target;
 }
 
-async function markAsSynced(notePath) {
+function markAsSynced(notePath) {
   const content = fs.readFileSync(notePath, 'utf8');
-  const updated = updateFrontmatter(content, { sync_status: 'synced' });
-  fs.writeFileSync(notePath, updated, 'utf8');
+  fs.writeFileSync(notePath, updateFrontmatter(content, { sync_status: 'synced' }), 'utf8');
 }
 
-async function markAsError(notePath, errorMsg) {
+function markAsError(notePath, errorMsg) {
   const content = fs.readFileSync(notePath, 'utf8');
-  const updated = updateFrontmatter(content, { sync_status: 'error', last_error: errorMsg });
-  fs.writeFileSync(notePath, updated, 'utf8');
+  fs.writeFileSync(
+    notePath,
+    updateFrontmatter(content, { sync_status: 'error', last_error: errorMsg }),
+    'utf8'
+  );
 }
 
-async function runSync() {
+async function runSync({ dryRun = false } = {}) {
   const config = loadConfig();
-  console.log(`[${new Date().toISOString()}] Iniciando sync...`);
+  const stamp = new Date().toISOString();
+  console.log(`[${stamp}] Iniciando sync${dryRun ? ' (DRY RUN — no escribe nada)' : ''}...`);
+  console.log(`  Vault: ${config.obsidian.vault_path}  ·  write_mode: ${obsidian.writeMode()}`);
+
+  let ok = 0;
+  let failed = 0;
+  let pending = 0;
 
   for (const project of config.projects) {
     if (!project.enabled) continue;
 
     const notes = getLocalNotes(project.path);
-    console.log(`  Proyecto "${project.name}": ${notes.length} notas pendientes`);
+    if (notes.length === 0) continue;
+
+    pending += notes.length;
+    console.log(`\n  ${project.name} → ${project.vault_folder}: ${notes.length} pendiente(s)`);
 
     for (const note of notes) {
+      const target = vaultPaths.resolveTarget(project.name, note.category, note.filename, config);
+
+      if (dryRun) {
+        console.log(`    [${target.area}] ${note.category}/${note.filename}`);
+        console.log(`        → ${target.path}`);
+        continue;
+      }
+
       try {
-        await syncNote(project.name, note);
-        await markAsSynced(note.filePath);
-        console.log(`    OK: ${note.category}/${note.filename}`);
+        const moc = await ensureMoc(project.name, note.category, config);
+        if (moc) console.log(`    MOC creado: ${moc}`);
+
+        await syncNote(project.name, note, config);
+        markAsSynced(note.filePath);
+        ok++;
+        console.log(`    OK  → ${target.path}`);
       } catch (err) {
-        await markAsError(note.filePath, err.message);
-        console.log(`    ERROR: ${note.category}/${note.filename} - ${err.message}`);
+        markAsError(note.filePath, err.message);
+        failed++;
+        console.log(`    ERR → ${target.path}\n         ${err.message}`);
       }
     }
   }
 
-  console.log(`[${new Date().toISOString()}] Sync completado.`);
+  if (pending === 0) {
+    console.log('\n  Nada pendiente.');
+  } else if (!dryRun) {
+    console.log(`\n[${new Date().toISOString()}] Sync completado: ${ok} ok, ${failed} con error.`);
+  }
+
+  return { ok, failed, pending };
 }
 
 if (require.main === module) {
@@ -147,14 +193,15 @@ if (require.main === module) {
   if (args.includes('--daemon')) {
     const config = loadConfig();
     const interval = config.sync.interval_minutes;
-    const cronExpr = `*/${interval} * * * *`;
-
     const cron = require('node-cron');
     console.log(`Iniciando daemon de sync (cada ${interval} minutos)...`);
-    cron.schedule(cronExpr, runSync);
+    cron.schedule(`*/${interval} * * * *`, () => runSync());
   } else {
-    runSync().catch(console.error);
+    runSync({ dryRun: args.includes('--dry-run') }).catch(err => {
+      console.error(err);
+      process.exit(1);
+    });
   }
 }
 
-module.exports = { runSync, getLocalNotes, syncNote };
+module.exports = { runSync, getLocalNotes, syncNote, ensureMoc };

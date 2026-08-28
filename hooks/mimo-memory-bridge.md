@@ -15,7 +15,7 @@ Escribir en `.second-brain/` cuando:
 
 Usar el CLI:
 ```bash
-node /home/keyz/.local/share/mimocode/second-brain/src/write-note.js \
+node /mnt/d/Projects/second-brain/src/write-note.js \
   <project> <type> <title> <agent> <content>
 ```
 
