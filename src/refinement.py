@@ -33,6 +33,16 @@ def read_frontmatter(content):
 def write_frontmatter(fm):
     return '---\n' + yaml.dump(fm, allow_unicode=True, default_flow_style=False) + '---\n'
 
+def note_date(frontmatter):
+    """Fecha canonica de una nota, en YYYY-MM-DD.
+
+    `created` es el campo canonico desde el 2026-08-27; `date` queda como
+    fallback para las notas escritas antes (duplicaba a `created` y por eso
+    se elimino del template).
+    """
+    raw = frontmatter.get('created') or frontmatter.get('date') or ''
+    return str(raw)[:10]
+
 def get_all_notes(project_path):
     sb_dir = Path(project_path) / SECOND_BRAIN_DIR
     if not sb_dir.exists():
@@ -107,7 +117,7 @@ def consolidate_daily_notes(notes):
 
     weeks = {}
     for note in diario_notes:
-        date_str = note['frontmatter'].get('date', '')
+        date_str = note_date(note['frontmatter'])
         if date_str:
             try:
                 date = datetime.strptime(date_str, '%Y-%m-%d')
@@ -122,7 +132,7 @@ def consolidate_daily_notes(notes):
     for week_key, week_notes in weeks.items():
         if len(week_notes) >= 3:
             summary_content = f"# Resumen Semanal {week_key}\n\n"
-            for note in sorted(week_notes, key=lambda n: n['frontmatter'].get('date', '')):
+            for note in sorted(week_notes, key=lambda n: note_date(n['frontmatter'])):
                 summary_content += f"\n---\n\n{note['body']}\n"
 
             for note in week_notes:
@@ -135,12 +145,11 @@ def consolidate_daily_notes(notes):
 
             summary_path = Path(week_notes[0]['path']).parent / f"semanal-{week_key}.md"
             summary_fm = {
+                'tags': ['consolidado', 'semanal'],
+                'created': datetime.now().strftime('%Y-%m-%d'),
                 'type': 'session',
                 'agent': 'refinement-engine',
                 'project': week_notes[0]['frontmatter'].get('project', ''),
-                'date': week_notes[0]['frontmatter'].get('date', ''),
-                'tags': ['consolidado', 'semanal'],
-                'created': datetime.now().isoformat(),
                 'sync_status': 'pending',
                 'refined': True
             }

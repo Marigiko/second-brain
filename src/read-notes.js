@@ -55,7 +55,11 @@ function readNotes(projectName, query = '', options = {}) {
       const content = fs.readFileSync(filePath, 'utf8');
       const fm = readFrontmatter(content);
 
-      if (since && fm.date && fm.date < since) continue;
+      // `created` es el campo canonico; `date` queda como fallback para las
+      // notas escritas antes del 2026-08-27.
+      const noteDate = (fm.created || fm.date || '').slice(0, 10);
+
+      if (since && noteDate && noteDate < since) continue;
       if (!searchInContent(content, query)) continue;
 
       const bodyMatch = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)/);
@@ -65,7 +69,7 @@ function readNotes(projectName, query = '', options = {}) {
         category,
         filename: file,
         title: fm.title || file.replace('.md', ''),
-        date: fm.date,
+        date: noteDate,
         tags: fm.tags || [],
         agent: fm.agent,
         body: body.slice(0, 500),

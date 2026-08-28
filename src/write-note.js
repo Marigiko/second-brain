@@ -15,15 +15,18 @@ function loadTemplates() {
 
 function generateFrontmatter(type, agent, project, tags = []) {
   const templates = loadTemplates();
-  const template = templates[type] || templates['aprendizaje'];
-  const now = new Date().toISOString();
+  // Ojo: el fallback decia templates['aprendizaje'] (singular) y esa key no existe,
+  // asi que un `type` desconocido producia un frontmatter sin `type`.
+  const template = templates[type] || templates['aprendizajes'];
+  // Convencion del vault: `created` en ISO corto (YYYY-MM-DD). El campo `date`
+  // se elimino porque lo duplicaba.
+  const today = new Date().toISOString().split('T')[0];
   return {
     ...template,
+    tags,
+    created: today,
     agent,
     project,
-    date: now.split('T')[0],
-    tags,
-    created: now,
     sync_status: 'pending',
     refined: false
   };
