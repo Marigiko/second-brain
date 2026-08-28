@@ -1,6 +1,6 @@
 {
   "obsidian": {
-    "vault_path": "D:/Documentos/Bovedas/Main/Second Brain",
+    "vault_path": "D:/Documentos/Bovedas/Main",
     "api_base_url": "https://127.0.0.1:27124",
     "api_key_env": "OBSIDIAN_API_KEY",
     "use_http_fallback": true,
@@ -20,6 +20,131 @@
     {
       "name": "gentle-ai",
       "path": "/mnt/d/Projects/gentle-ai",
+      "enabled": true
+    },
+    {
+      "name": "ai-job-search",
+      "path": "/mnt/d/Projects/ai-job-search",
+      "enabled": true
+    },
+    {
+      "name": "AI-Lead-Intelligence-Platform",
+      "path": "/mnt/d/Projects/AI-Lead-Intelligence-Platform",
+      "enabled": true
+    },
+    {
+      "name": "ai-workstation-environment",
+      "path": "/mnt/d/Projects/ai-workstation-environment",
+      "enabled": true
+    },
+    {
+      "name": "ai-workstation",
+      "path": "/mnt/d/Projects/ai-workstation",
+      "enabled": true
+    },
+    {
+      "name": "FAANG-Break",
+      "path": "/mnt/d/Projects/FAANG-Break",
+      "enabled": true
+    },
+    {
+      "name": "facil-web-ai",
+      "path": "/mnt/d/Projects/facil-web-ai",
+      "enabled": true
+    },
+    {
+      "name": "GeoPlanning-Backend",
+      "path": "/mnt/d/Projects/GeoPlanning-Backend",
+      "enabled": true
+    },
+    {
+      "name": "GeoPlanning-FrontEnd",
+      "path": "/mnt/d/Projects/GeoPlanning-FrontEnd",
+      "enabled": true
+    },
+    {
+      "name": "Hornero-Tech-SaaS",
+      "path": "/mnt/d/Projects/Hornero-Tech-SaaS",
+      "enabled": true
+    },
+    {
+      "name": "Kaizen",
+      "path": "/mnt/d/Projects/Kaizen",
+      "enabled": true
+    },
+    {
+      "name": "Kosame",
+      "path": "/mnt/d/Projects/Kosame",
+      "enabled": true
+    },
+    {
+      "name": "mimo-xp",
+      "path": "/mnt/d/Projects/mimo-xp",
+      "enabled": true
+    },
+    {
+      "name": "MindLingo",
+      "path": "/mnt/d/Projects/MindLingo",
+      "enabled": true
+    },
+    {
+      "name": "obsidian-importer",
+      "path": "/mnt/d/Projects/obsidian-importer",
+      "enabled": true
+    },
+    {
+      "name": "Personal-Cam",
+      "path": "/mnt/d/Projects/Personal-Cam",
+      "enabled": true
+    },
+    {
+      "name": "Real-time-Safety-Monitoring-Platform",
+      "path": "/mnt/d/Projects/Real-time-Safety-Monitoring-Platform",
+      "enabled": true
+    },
+    {
+      "name": "SportzX",
+      "path": "/mnt/d/Projects/SportzX",
+      "enabled": true
+    },
+    {
+      "name": "terax-ai",
+      "path": "/mnt/d/Projects/terax-ai",
+      "enabled": true
+    },
+    {
+      "name": "TiendaVinos",
+      "path": "/mnt/d/Projects/TiendaVinos",
+      "enabled": true
+    },
+    {
+      "name": "Totem-Digital",
+      "path": "/mnt/d/Projects/Totem-Digital",
+      "enabled": true
+    },
+    {
+      "name": "Sistema_Laravel",
+      "path": "/mnt/d/Projects/Sistema_Laravel",
+      "enabled": true
+    },
+    {
+      "name": "SISAD-V2",
+      "path": "/mnt/d/Projects/SISAD-V2",
+      "enabled": true
+    },
+    {
+      "name": "scrap",
+      "path": "/mnt/d/Projects/scrap",
+      "enabled": true
+    },
+    {
+      "name": "InterSys",
+      "path": "/mnt/d/Projects/InterSys",
+      "enabled": true
+    },
+    {
+      "name": "dotfiles",
+      "path": "/mnt/d/Projects/dotfiles",
       "enabled": true
     }
   ],

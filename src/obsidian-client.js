@@ -10,7 +10,19 @@ function loadConfig() {
 }
 
 function getApiKey() {
-  return process.env[loadConfig().obsidian.api_key_env];
+  const keyVar = loadConfig().obsidian.api_key_env;
+  // Try process.env first, then load from env file
+  if (process.env[keyVar]) return process.env[keyVar];
+  // Fallback: read from awe env file
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const envPath = path.join(process.env.HOME || '/home/keyz', '.config/awe/env/mcp.env');
+    const content = fs.readFileSync(envPath, 'utf8');
+    const match = content.match(new RegExp(`^${keyVar}=(.+)$`, 'm'));
+    if (match) return match[1].trim();
+  } catch (e) {}
+  return null;
 }
 
 function makeRequest(method, apiPath, body = null, isHttps = true) {
@@ -32,7 +44,14 @@ function makeRequest(method, apiPath, body = null, isHttps = true) {
     };
 
     if (body) {
-      options.headers['Content-Length'] = Buffer.byteLength(JSON.stringify(body));
+      // Send as plain text for vault operations, JSON for others
+      const isJson = typeof body === 'object' && !body._isRawString;
+      if (!isJson) {
+        options.headers['Content-Type'] = 'text/plain';
+        options.headers['Content-Length'] = Buffer.byteLength(String(body));
+      } else {
+        options.headers['Content-Length'] = Buffer.byteLength(JSON.stringify(body));
+      }
     }
 
     const protocol = isHttps ? https : http;
@@ -63,7 +82,8 @@ function makeRequest(method, apiPath, body = null, isHttps = true) {
     });
 
     if (body) {
-      req.write(JSON.stringify(body));
+      const isJson = typeof body === 'object' && !body._isRawString;
+      req.write(isJson ? JSON.stringify(body) : String(body));
     }
     req.end();
   });
