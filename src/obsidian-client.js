@@ -10,7 +10,19 @@ function loadConfig() {
 }
 
 function getApiKey() {
-  return process.env[loadConfig().obsidian.api_key_env];
+  const keyVar = loadConfig().obsidian.api_key_env;
+  if (process.env[keyVar]) return process.env[keyVar];
+  // Fallback al env de awe: el cron corre sin el entorno de la shell interactiva,
+  // asi que sin esto la key no aparece y toda escritura via API falla.
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const envPath = path.join(process.env.HOME || '/home/keyz', '.config/awe/env/mcp.env');
+    const content = fs.readFileSync(envPath, 'utf8');
+    const match = content.match(new RegExp(`^${keyVar}=(.+)$`, 'm'));
+    if (match) return match[1].trim();
+  } catch (e) {}
+  return null;
 }
 
 function makeRequest(method, apiPath, body = null, isHttps = true) {
@@ -32,7 +44,15 @@ function makeRequest(method, apiPath, body = null, isHttps = true) {
     };
 
     if (body) {
-      options.headers['Content-Length'] = Buffer.byteLength(JSON.stringify(body));
+      // La Local REST API espera el cuerpo de una nota como texto plano; solo las
+      // operaciones de control viajan como JSON.
+      const isJson = typeof body === 'object' && !body._isRawString;
+      if (!isJson) {
+        options.headers['Content-Type'] = 'text/plain';
+        options.headers['Content-Length'] = Buffer.byteLength(String(body));
+      } else {
+        options.headers['Content-Length'] = Buffer.byteLength(JSON.stringify(body));
+      }
     }
 
     const protocol = isHttps ? https : http;
@@ -63,7 +83,8 @@ function makeRequest(method, apiPath, body = null, isHttps = true) {
     });
 
     if (body) {
-      req.write(JSON.stringify(body));
+      const isJson = typeof body === 'object' && !body._isRawString;
+      req.write(isJson ? JSON.stringify(body) : String(body));
     }
     req.end();
   });
