@@ -68,6 +68,17 @@
       "enabled": true
     },
     {
+      "name": "scrap-dev-mario",
+      "path": "/mnt/d/Projects/scrap-dev-mario",
+      "vault_folder": "Magnar Scrap",
+      "knowledge_domain": "Scraping Legal",
+      "knowledge_categories": [
+        "aprendizajes",
+        "convenciones"
+      ],
+      "enabled": true
+    },
+    {
       "name": "ai-workstation",
       "path": "/mnt/d/Projects/ai-workstation",
       "vault_folder": "Ecosistema AI",
