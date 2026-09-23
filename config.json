@@ -2,7 +2,7 @@
   "obsidian": {
     "vault_path": "/mnt/d/Documentos/Bovedas/Main",
     "vault_path_windows": "D:/Documentos/Bovedas/Main",
-    "write_mode": "auto",
+    "write_mode": "filesystem",
     "api_base_url": "https://127.0.0.1:27124",
     "api_key_env": "OBSIDIAN_API_KEY",
     "use_http_fallback": true,
@@ -56,17 +56,6 @@
     "consolidate_threshold": 0.7
   },
   "projects": [
-    {
-      "name": "scrap",
-      "path": "/mnt/d/Projects/scrap",
-      "vault_folder": "Magnar Scrap",
-      "knowledge_domain": "Scraping Legal",
-      "knowledge_categories": [
-        "aprendizajes",
-        "convenciones"
-      ],
-      "enabled": true
-    },
     {
       "name": "scrap-dev-mario",
       "path": "/mnt/d/Projects/scrap-dev-mario",
